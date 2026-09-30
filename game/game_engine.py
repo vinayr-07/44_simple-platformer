@@ -10,6 +10,13 @@ BROWN = (150, 100, 60)
 RED = (220, 60, 60)
 GREEN = (0, 200, 0)
 GRAY = (185, 185, 195)
+GOLD = (245, 205, 70)
+
+DIFFICULTIES = (
+    {"name": "Easy", "gravity": 0.45, "jump_strength": -11.0},
+    {"name": "Medium", "gravity": 0.60, "jump_strength": -12.0},
+    {"name": "Hard", "gravity": 0.80, "jump_strength": -13.5},
+)
 
 
 class GameEngine:
@@ -37,14 +44,49 @@ class GameEngine:
         self.small_font = pygame.font.SysFont("Arial", 20)
         self.game_over = False
         self.game_over_reason = ""
+        self.selected_difficulty = 1
+        self.gravity = DIFFICULTIES[self.selected_difficulty]["gravity"]
+        self.player.jump_strength = DIFFICULTIES[self.selected_difficulty]["jump_strength"]
+
+    @property
+    def difficulty_name(self):
+        return DIFFICULTIES[self.selected_difficulty]["name"]
+
+    def _apply_difficulty(self):
+        config = DIFFICULTIES[self.selected_difficulty]
+        self.gravity = config["gravity"]
+        self.player.jump_strength = config["jump_strength"]
+
+    def reset_game(self):
+        self._apply_difficulty()
+        self.player.reset(self.start_x, self.start_y)
+        self.score = 0
+        self.game_over = False
+        self.game_over_reason = ""
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN and event.key in (
-            pygame.K_SPACE,
-            pygame.K_UP,
-            pygame.K_w,
-        ) and not self.game_over:
+        if not self.game_over and event.type == pygame.KEYDOWN and event.key in (
+            pygame.K_SPACE, pygame.K_UP, pygame.K_w
+        ):
             self.player.jump()
+            return False
+
+        if self.game_over and event.type == pygame.KEYDOWN:
+            if event.key in (pygame.K_LEFT, pygame.K_a):
+                self.selected_difficulty = (self.selected_difficulty - 1) % len(DIFFICULTIES)
+            elif event.key in (pygame.K_RIGHT, pygame.K_d):
+                self.selected_difficulty = (self.selected_difficulty + 1) % len(DIFFICULTIES)
+            elif event.key == pygame.K_1:
+                self.selected_difficulty = 0
+            elif event.key == pygame.K_2:
+                self.selected_difficulty = 1
+            elif event.key == pygame.K_3:
+                self.selected_difficulty = 2
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_r, pygame.K_SPACE):
+                self.reset_game()
+            elif event.key in (pygame.K_ESCAPE, pygame.K_q):
+                return True
+        return False
 
     def handle_input(self):
         if self.game_over:
@@ -120,7 +162,9 @@ class GameEngine:
         pygame.draw.rect(screen, WHITE, self.player.rect())
 
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
+        difficulty_text = self.small_font.render(f"Difficulty: {self.difficulty_name}", True, WHITE)
         screen.blit(score_text, (10, 10))
+        screen.blit(difficulty_text, (10, 45))
 
         if self.game_over:
             overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
@@ -130,10 +174,24 @@ class GameEngine:
             title = self.title_font.render("GAME OVER", True, WHITE)
             final_score = self.font.render(f"Final score: {self.score}", True, WHITE)
             reason = self.small_font.render(self.game_over_reason, True, GRAY)
-            hint = self.small_font.render("Press R to restart or Q/Esc to quit.", True, WHITE)
+            prompt = self.font.render("Choose difficulty", True, WHITE)
+            hint = self.small_font.render("1/2/3 or Left/Right, then Enter. Q/Esc to quit.", True, GRAY)
 
-            screen.blit(title, ((self.width - title.get_width()) // 2, 130))
-            screen.blit(final_score, ((self.width - final_score.get_width()) // 2, 205))
-            screen.blit(reason, ((self.width - reason.get_width()) // 2, 245))
-            screen.blit(hint, ((self.width - hint.get_width()) // 2, 300))
+            screen.blit(title, ((self.width - title.get_width()) // 2, 70))
+            screen.blit(final_score, ((self.width - final_score.get_width()) // 2, 140))
+            screen.blit(reason, ((self.width - reason.get_width()) // 2, 185))
+            screen.blit(prompt, ((self.width - prompt.get_width()) // 2, 230))
+
+            option_y = 275
+            option_gap = 135
+            for index, difficulty in enumerate(DIFFICULTIES):
+                option = self.font.render(
+                    difficulty["name"],
+                    True,
+                    GOLD if index == self.selected_difficulty else WHITE,
+                )
+                x = (self.width // 2) - option_gap + index * option_gap
+                screen.blit(option, (x - option.get_width() // 2, option_y))
+
+            screen.blit(hint, ((self.width - hint.get_width()) // 2, 340))
 
