@@ -9,6 +9,7 @@ WHITE = (255, 255, 255)
 BROWN = (150, 100, 60)
 RED = (220, 60, 60)
 GREEN = (0, 200, 0)
+GRAY = (185, 185, 195)
 
 
 class GameEngine:
@@ -32,7 +33,10 @@ class GameEngine:
 
         self.score = 0
         self.font = pygame.font.SysFont("Arial", 30)
+        self.title_font = pygame.font.SysFont("Arial", 52, bold=True)
+        self.small_font = pygame.font.SysFont("Arial", 20)
         self.game_over = False
+        self.game_over_reason = ""
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key in (
@@ -93,10 +97,12 @@ class GameEngine:
         for hazard in self.hazards:
             if self.player.rect().colliderect(hazard.rect()):
                 self.game_over = True
+                self.game_over_reason = "You hit the hazard."
                 return
 
         if self.player.y > self.height:
             self.game_over = True
+            self.game_over_reason = "You fell off the level."
             return
 
         if self.player.x + self.player.width >= self.goal_x:
@@ -115,3 +121,19 @@ class GameEngine:
 
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
         screen.blit(score_text, (10, 10))
+
+        if self.game_over:
+            overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 175))
+            screen.blit(overlay, (0, 0))
+
+            title = self.title_font.render("GAME OVER", True, WHITE)
+            final_score = self.font.render(f"Final score: {self.score}", True, WHITE)
+            reason = self.small_font.render(self.game_over_reason, True, GRAY)
+            hint = self.small_font.render("Press R to restart or Q/Esc to quit.", True, WHITE)
+
+            screen.blit(title, ((self.width - title.get_width()) // 2, 130))
+            screen.blit(final_score, ((self.width - final_score.get_width()) // 2, 205))
+            screen.blit(reason, ((self.width - reason.get_width()) // 2, 245))
+            screen.blit(hint, ((self.width - hint.get_width()) // 2, 300))
+
