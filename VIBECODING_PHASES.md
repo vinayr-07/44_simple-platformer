@@ -32,7 +32,6 @@ Result: procedural tones in `game/sound_manager.py`.
 
 ## Phase 5 — Verification + documentation
 
-Prompt:
-> Add focused collision tests and document the completed tasks, controls, run commands, and required Lab 4 evidence.
+No additional feature prompt was needed. Local verification and documentation were added after the four implementation prompts so the feature work remains within the requested three-to-four-attempt workflow.
 
-Result: `test_game_logic.py`, README updates, and this phase log.
+Result: `test_game_logic.py`, README updates, submission checklist, and this phase log.
