@@ -1,14 +1,15 @@
 import pygame
+
+from .collision import swept_vertical_landing_y
+from .hazard import Hazard
 from .player import Player
 from .platform import Platform
-from .hazard import Hazard
-
-# Game Engine
 
 WHITE = (255, 255, 255)
 BROWN = (150, 100, 60)
 RED = (220, 60, 60)
 GREEN = (0, 200, 0)
+
 
 class GameEngine:
     def __init__(self, width, height):
@@ -19,9 +20,6 @@ class GameEngine:
         self.start_x, self.start_y = 40, height - 120
         self.player = Player(self.start_x, self.start_y)
 
-        # A simple hand-built level: platforms with gaps between them
-        # (falling into a gap means falling off the bottom of the
-        # screen), one hazard, and a goal near the right edge.
         ground_y = height - 40
         self.platforms = [
             Platform(0, ground_y, 160),
@@ -37,10 +35,18 @@ class GameEngine:
         self.game_over = False
 
     def handle_event(self, event):
-        if event.type == pygame.KEYDOWN and event.key in (pygame.K_SPACE, pygame.K_UP, pygame.K_w):
+        if event.type == pygame.KEYDOWN and event.key in (
+            pygame.K_SPACE,
+            pygame.K_UP,
+            pygame.K_w,
+        ) and not self.game_over:
             self.player.jump()
 
     def handle_input(self):
+        if self.game_over:
+            self.player.vx = 0
+            return
+
         keys = pygame.key.get_pressed()
         self.player.vx = 0
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
@@ -52,26 +58,37 @@ class GameEngine:
         if self.game_over:
             return
 
-        self.player.vy += self.gravity
+        self.player.vy = min(self.player.vy + self.gravity, self.player.max_fall_speed)
         self.player.x = max(0, self.player.x + self.player.vx)
 
-        # NOTE: gravity has no terminal-velocity cap, so vertical speed
-        # keeps growing the longer the player falls. Collision is only
-        # checked against the player's rect *after* it has already
-        # moved for the frame - there's no check for whether the
-        # player's path crossed a platform along the way. After a
-        # long enough fall (e.g. off the elevated middle platform),
-        # a single frame's movement can carry the player from just
-        # above a platform to just below it without the two rects
-        # ever overlapping, so the platform is skipped entirely and
-        # the player falls straight through. See Task 1 in the README.
-        self.player.y += self.player.vy
+        previous_y = self.player.y
+        next_y = self.player.y + self.player.vy
         self.player.on_ground = False
-        for platform in self.platforms:
-            if self.player.rect().colliderect(platform.rect()) and self.player.vy >= 0:
-                self.player.y = platform.y - self.player.height
+
+        if self.player.vy >= 0:
+            landing_y = None
+            for platform in self.platforms:
+                candidate = swept_vertical_landing_y(
+                    previous_y,
+                    next_y,
+                    self.player.height,
+                    self.player.x,
+                    self.player.width,
+                    platform.x,
+                    platform.y,
+                    platform.width,
+                )
+                if candidate is not None and (landing_y is None or candidate < landing_y):
+                    landing_y = candidate
+
+            if landing_y is not None:
+                self.player.y = landing_y - self.player.height
                 self.player.vy = 0
                 self.player.on_ground = True
+            else:
+                self.player.y = next_y
+        else:
+            self.player.y = next_y
 
         for hazard in self.hazards:
             if self.player.rect().colliderect(hazard.rect()):
@@ -82,10 +99,9 @@ class GameEngine:
             self.game_over = True
             return
 
-        if self.player.x >= self.goal_x:
+        if self.player.x + self.player.width >= self.goal_x:
             self.score += 1
-            self.player.x, self.player.y = self.start_x, self.start_y
-            self.player.vy = 0
+            self.player.reset(self.start_x, self.start_y)
 
     def render(self, screen):
         for platform in self.platforms:
@@ -95,13 +111,7 @@ class GameEngine:
 
         goal_rect = pygame.Rect(self.goal_x, 0, 6, self.height)
         pygame.draw.rect(screen, GREEN, goal_rect)
-
         pygame.draw.rect(screen, WHITE, self.player.rect())
 
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
         screen.blit(score_text, (10, 10))
-
-        if self.game_over and not getattr(self, "_game_over_logged", False):
-            # NOTE: no proper game-over screen yet - see Task 2 in the README.
-            print("Game over! Final score:", self.score)
-            self._game_over_logged = True
