@@ -21,7 +21,7 @@ Result: graphical Game Over overlay with final score and reason.
 Prompt:
 > Add replay after Game Over with Easy, Medium, and Hard gravity/jump settings. Let the user choose using number keys or Left/Right, then restart with Enter. Add Q/Esc to quit.
 
-Result: three difficulty profiles, selection UI, restart logic, and quit handling.
+Result: three difficulty profiles, selection UI, restart logic, and quit handling. Each difficulty is backed by its own platform/hazard layout and scenario name.
 
 ## Phase 4 — Sound
 
@@ -35,3 +35,12 @@ Result: procedural tones in `game/sound_manager.py`.
 No additional feature prompt was needed. Local verification and documentation were added after the four implementation prompts so the feature work remains within the requested three-to-four-attempt workflow.
 
 Result: `test_game_logic.py`, README updates, submission checklist, and this phase log.
+
+## Verification correction — Difficulty scenario rebuild
+
+Observed issue during local testing: changing the replay difficulty altered gravity/jump settings but reused the same platform and hazard layout.
+
+Correction prompt:
+> Fix the difficulty selection bug so Easy, Medium, and Hard rebuild different playable platformer scenarios. Keep the movement settings, make Easy materially more forgiving, make Hard use a tighter route with more hazards, and update the selected scenario immediately when the user changes difficulty on the Game Over screen.
+
+Result: added `game/level_data.py`, rebuilt platforms/hazards from the selected configuration, and added tests proving all three layouts are distinct.

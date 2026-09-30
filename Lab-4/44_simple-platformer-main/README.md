@@ -14,13 +14,13 @@ Touching the red hazard or falling below the screen produces an in-game Game Ove
 
 ### Task 3 — Add Replay Option
 
-After Game Over, select a difficulty:
+After Game Over, select a difficulty. Each difficulty now rebuilds a genuinely different level scenario as well as changing movement physics:
 
-- **Easy** — gravity `0.45`, jump strength `-11.0`
-- **Medium** — gravity `0.60`, jump strength `-12.0`
-- **Hard** — gravity `0.80`, jump strength `-13.5`
+- **Easy — Training Meadow:** wider platforms, a shorter route, one small hazard, lighter gravity, and faster horizontal movement.
+- **Medium — Bridge Run:** the original four-platform route and central hazard.
+- **Hard — Sky Gauntlet:** narrower elevated platforms, more jumps, three hazards, and a higher goal.
 
-Use `1/2/3` or Left/Right to select, then press Enter (or `R`). `Q` or Esc quits.
+Use `1/2/3` or Left/Right to select. The selected scenario updates immediately on the Game Over screen, and Enter (or `R`) starts that exact scenario. `Q` or Esc quits.
 
 ### Task 4 — Add Sound Feedback
 
