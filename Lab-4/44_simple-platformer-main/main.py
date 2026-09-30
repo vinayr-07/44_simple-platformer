@@ -22,7 +22,7 @@ engine = GameEngine(WIDTH, HEIGHT)
 def main():
     running = True
     while running:
-        SCREEN.fill(SKY)
+        SCREEN.fill(engine.background_color)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False

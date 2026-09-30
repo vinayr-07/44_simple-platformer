@@ -2,6 +2,7 @@ import pygame
 
 from .collision import swept_vertical_landing_y
 from .hazard import Hazard
+from .level_data import DIFFICULTIES
 from .player import Player
 from .platform import Platform
 from .sound_manager import SoundManager
@@ -13,31 +14,13 @@ GREEN = (0, 200, 0)
 GRAY = (185, 185, 195)
 GOLD = (245, 205, 70)
 
-DIFFICULTIES = (
-    {"name": "Easy", "gravity": 0.45, "jump_strength": -11.0},
-    {"name": "Medium", "gravity": 0.60, "jump_strength": -12.0},
-    {"name": "Hard", "gravity": 0.80, "jump_strength": -13.5},
-)
-
 
 class GameEngine:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.gravity = 0.6
-
         self.start_x, self.start_y = 40, height - 120
         self.player = Player(self.start_x, self.start_y)
-
-        ground_y = height - 40
-        self.platforms = [
-            Platform(0, ground_y, 160),
-            Platform(220, ground_y, 140),
-            Platform(420, ground_y - 60, 120),
-            Platform(600, ground_y, 180),
-        ]
-        self.hazards = [Hazard(240, ground_y - 14, 100)]
-        self.goal_x = 740
 
         self.score = 0
         self.font = pygame.font.SysFont("Arial", 30)
@@ -46,21 +29,60 @@ class GameEngine:
         self.game_over = False
         self.game_over_reason = ""
         self.selected_difficulty = 1
-        self.gravity = DIFFICULTIES[self.selected_difficulty]["gravity"]
-        self.player.jump_strength = DIFFICULTIES[self.selected_difficulty]["jump_strength"]
         self.sound = SoundManager()
+
+        self.gravity = 0.6
+        self.goal_x = 0
+        self.level_name = ""
+        self.background_color = (100, 160, 220)
+        self.platforms = []
+        self.hazards = []
+
+        self._apply_difficulty()
+        self._build_level()
 
     @property
     def difficulty_name(self):
         return DIFFICULTIES[self.selected_difficulty]["name"]
 
+    @property
+    def scenario_name(self):
+        return self.level_name
+
     def _apply_difficulty(self):
         config = DIFFICULTIES[self.selected_difficulty]
         self.gravity = config["gravity"]
         self.player.jump_strength = config["jump_strength"]
+        self.player.speed = config["speed"]
+        self.player.max_fall_speed = config["max_fall_speed"]
+        self.goal_x = config["goal_x"]
+        self.level_name = config["scenario"]
+        self.background_color = config["background"]
+
+    def _build_level(self):
+        """Build the selected difficulty's platforms and hazards."""
+        config = DIFFICULTIES[self.selected_difficulty]
+        ground_y = self.height - 40
+
+        self.platforms = [
+            Platform(x, ground_y + y_offset, width, height)
+            for x, y_offset, width, height in config["platforms"]
+        ]
+        self.hazards = [
+            Hazard(x, ground_y + y_offset - height, width, height)
+            for x, y_offset, width, height in config["hazards"]
+        ]
+
+    def _select_difficulty(self, index):
+        self.selected_difficulty = index % len(DIFFICULTIES)
+        self._apply_difficulty()
+        # Rebuild immediately so the selected level/scenario is also visible
+        # behind the Game Over overlay before the user presses Enter.
+        self._build_level()
 
     def reset_game(self):
         self._apply_difficulty()
+        self._build_level()
         self.player.reset(self.start_x, self.start_y)
         self.score = 0
         self.game_over = False
@@ -76,15 +98,15 @@ class GameEngine:
 
         if self.game_over and event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_LEFT, pygame.K_a):
-                self.selected_difficulty = (self.selected_difficulty - 1) % len(DIFFICULTIES)
+                self._select_difficulty(self.selected_difficulty - 1)
             elif event.key in (pygame.K_RIGHT, pygame.K_d):
-                self.selected_difficulty = (self.selected_difficulty + 1) % len(DIFFICULTIES)
+                self._select_difficulty(self.selected_difficulty + 1)
             elif event.key == pygame.K_1:
-                self.selected_difficulty = 0
+                self._select_difficulty(0)
             elif event.key == pygame.K_2:
-                self.selected_difficulty = 1
+                self._select_difficulty(1)
             elif event.key == pygame.K_3:
-                self.selected_difficulty = 2
+                self._select_difficulty(2)
             elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_r, pygame.K_SPACE):
                 self.reset_game()
             elif event.key in (pygame.K_ESCAPE, pygame.K_q):
@@ -168,7 +190,11 @@ class GameEngine:
         pygame.draw.rect(screen, WHITE, self.player.rect())
 
         score_text = self.font.render(f"Score: {self.score}", True, WHITE)
-        difficulty_text = self.small_font.render(f"Difficulty: {self.difficulty_name}", True, WHITE)
+        difficulty_text = self.small_font.render(
+            f"{self.scenario_name} | Difficulty: {self.difficulty_name}",
+            True,
+            WHITE,
+        )
         screen.blit(score_text, (10, 10))
         screen.blit(difficulty_text, (10, 45))
 
@@ -180,8 +206,16 @@ class GameEngine:
             title = self.title_font.render("GAME OVER", True, WHITE)
             final_score = self.font.render(f"Final score: {self.score}", True, WHITE)
             reason = self.small_font.render(self.game_over_reason, True, GRAY)
-            prompt = self.font.render("Choose difficulty", True, WHITE)
-            hint = self.small_font.render("1/2/3 or Left/Right, then Enter. Q/Esc to quit.", True, GRAY)
+            prompt = self.font.render(
+                f"Choose difficulty for replay: {self.scenario_name}",
+                True,
+                WHITE,
+            )
+            hint = self.small_font.render(
+                "1/2/3 or Left/Right, then Enter. Q/Esc to quit.",
+                True,
+                GRAY,
+            )
 
             screen.blit(title, ((self.width - title.get_width()) // 2, 70))
             screen.blit(final_score, ((self.width - final_score.get_width()) // 2, 140))
@@ -200,4 +234,3 @@ class GameEngine:
                 screen.blit(option, (x - option.get_width() // 2, option_y))
 
             screen.blit(hint, ((self.width - hint.get_width()) // 2, 340))
-
