@@ -4,6 +4,7 @@ from .collision import swept_vertical_landing_y
 from .hazard import Hazard
 from .player import Player
 from .platform import Platform
+from .sound_manager import SoundManager
 
 WHITE = (255, 255, 255)
 BROWN = (150, 100, 60)
@@ -47,6 +48,7 @@ class GameEngine:
         self.selected_difficulty = 1
         self.gravity = DIFFICULTIES[self.selected_difficulty]["gravity"]
         self.player.jump_strength = DIFFICULTIES[self.selected_difficulty]["jump_strength"]
+        self.sound = SoundManager()
 
     @property
     def difficulty_name(self):
@@ -68,7 +70,8 @@ class GameEngine:
         if not self.game_over and event.type == pygame.KEYDOWN and event.key in (
             pygame.K_SPACE, pygame.K_UP, pygame.K_w
         ):
-            self.player.jump()
+            if self.player.jump():
+                self.sound.play_jump()
             return False
 
         if self.game_over and event.type == pygame.KEYDOWN:
@@ -140,15 +143,18 @@ class GameEngine:
             if self.player.rect().colliderect(hazard.rect()):
                 self.game_over = True
                 self.game_over_reason = "You hit the hazard."
+                self.sound.play_death()
                 return
 
         if self.player.y > self.height:
             self.game_over = True
             self.game_over_reason = "You fell off the level."
+            self.sound.play_death()
             return
 
         if self.player.x + self.player.width >= self.goal_x:
             self.score += 1
+            self.sound.play_goal()
             self.player.reset(self.start_x, self.start_y)
 
     def render(self, screen):
