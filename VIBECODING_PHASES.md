@@ -1,0 +1,38 @@
+# Lab 4 VibeCoding Phase Log
+
+This is a concise implementation log. It is not a substitute for exporting the actual ChatGPT/LLM conversation required by the course.
+
+## Phase 1 — Collision fix
+
+Prompt:
+> Fix the Pygame platformer's documented platform tunneling bug. Use swept vertical collision detection so a fast downward movement cannot pass through a platform. Keep existing controls and level layout.
+
+Result: added `game/collision.py`, integrated swept landing checks, and bounded terminal fall speed.
+
+## Phase 2 — Game Over
+
+Prompt:
+> Add a real in-game Game Over state for hazard contact and falling below the screen. Show the final score and failure reason, and stop normal updates while the Game Over screen is visible.
+
+Result: graphical Game Over overlay with final score and reason.
+
+## Phase 3 — Replay + difficulty
+
+Prompt:
+> Add replay after Game Over with Easy, Medium, and Hard gravity/jump settings. Let the user choose using number keys or Left/Right, then restart with Enter. Add Q/Esc to quit.
+
+Result: three difficulty profiles, selection UI, restart logic, and quit handling.
+
+## Phase 4 — Sound
+
+Prompt:
+> Add sound feedback for jump, reaching the goal, and death without requiring external binary assets. Make audio optional so the game still runs if a sound device is unavailable.
+
+Result: procedural tones in `game/sound_manager.py`.
+
+## Phase 5 — Verification + documentation
+
+Prompt:
+> Add focused collision tests and document the completed tasks, controls, run commands, and required Lab 4 evidence.
+
+Result: `test_game_logic.py`, README updates, and this phase log.

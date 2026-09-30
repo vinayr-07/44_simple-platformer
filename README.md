@@ -1,100 +1,65 @@
 # Real-Time Simple Platformer Game
 
-This project is a terminal-based platformer using **Pygame**. It introduces students to interactive game design using object-oriented principles and real-time graphical rendering.
+This Pygame platformer is the assigned `44_simple-platformer` Lab 4 project.
 
----
+## Lab 4 tasks completed
 
-## What’s Provided
+### Task 1 — Refine Collision Detection
 
-A partially working version of a platformer with:
+Platform landing now uses swept vertical collision detection. The engine checks whether the player's bottom crossed a platform top between the previous and next frame positions rather than checking only the final rectangle. A terminal fall speed also keeps motion bounded.
 
-- A player-controlled character with left/right movement, gravity, and jumping
-- A small hand-built level of platforms with gaps and one hazard
-- Score display
+### Task 2 — Implement Game Over Condition
 
-You are expected to **analyze**, **interact with an AI assistant**, and **complete/fix** the game to make it fully functional.
+Touching the red hazard or falling below the screen produces an in-game Game Over screen with the final score and the reason for failure. The game no longer relies on a console-only message.
 
-### **Use an LLM (e.g. ChatGPT or Claude) as your debugging and pair-programming partner for this lab.**
+### Task 3 — Add Replay Option
 
----
+After Game Over, select a difficulty:
 
-## Getting Started
+- **Easy** — gravity `0.45`, jump strength `-11.0`
+- **Medium** — gravity `0.60`, jump strength `-12.0`
+- **Hard** — gravity `0.80`, jump strength `-13.5`
 
-### Setup
+Use `1/2/3` or Left/Right to select, then press Enter (or `R`). `Q` or Esc quits.
 
-1. Clone the repo or download the project folder.
-2. Make sure you have Python 3.10+ installed.
-3. Install dependencies:
+### Task 4 — Add Sound Feedback
 
-```bash
-pip install -r requirements.txt
-```
+The game generates three small sound effects at runtime: jump, goal reached, and death. No external binary audio assets are required. If the machine has no usable audio device, gameplay still runs without sound.
 
-4. Run the game:
+## Run
+
+Python 3.10+ is recommended.
 
 ```bash
+python -m pip install -r requirements.txt
 python main.py
 ```
 
----
+## Controls
 
+| Action | Keys |
+|---|---|
+| Move left | `Left` / `A` |
+| Move right | `Right` / `D` |
+| Jump | `Space` / `Up` / `W` |
+| Select replay difficulty | `1` / `2` / `3` or Left/Right |
+| Restart after Game Over | `Enter` / `R` / `Space` |
+| Quit after Game Over | `Q` / `Esc` |
 
-## Tasks to Complete
+## Quick logic test
 
-Each task must be completed using an iterative process involving LLM suggestions and your critical code review.
-
-### Task 1: Refine Collision Detection
-
-> The player sometimes falls straight through a platform instead of landing on it, especially after a long fall. Investigate and enhance collision accuracy so landings register reliably regardless of fall speed.
-
-
-### Task 2: Implement Game Over Condition
-
-> Add a screen that displays the final score once the player falls off the bottom of the screen or touches a hazard, then gracefully waits for input instead of just printing to the console.
-
-
-### Task 3: Add Replay Option
-
-> After Game Over, allow the user to play again by choosing a difficulty (Easy, Medium, or Hard gravity/jump strength), or exit.
-
-
-### Task 4: Add Sound Feedback
-
-> Add basic sound effects for jumping, reaching the goal, and dying.
-
-
----
-
-## Expected Behavior
-
-- Smooth left/right movement using `Left`/`Right` or `A`/`D`, and jumping with `Space`/`Up`/`W`
-- Gravity pulls the player down and platforms stop the fall when landed on from above
-- Touching the hazard or falling off the bottom of the screen ends the game
-- Reaching the goal at the right edge increases the score and sends the player back to the start
-- Score is visible on screen at all times
-
----
-
-## Folder Structure
-
-```
-simple-platformer-main/
-├── main.py
-├── requirements.txt
-├── game/
-│   ├── game_engine.py
-│   ├── player.py
-│   ├── platform.py
-│   └── hazard.py
-└── README.md
+```bash
+pytest -q test_game_logic.py
 ```
 
----
+A syntax-only check that does not require Pygame to import:
 
-## Submission Checklist
+```bash
+python -m py_compile main.py game/*.py test_game_logic.py
+```
 
-Submission is only the following three things:
+## Lab submission evidence
 
-- [] A 10-second video of gameplay **before** your changes, showing the bug/broken behavior
-- [] A 10-second video of gameplay **after** your changes, showing the bug fixed and the new features working
-- [] The Chat/LLM used page link, with the complete chat history
+The course handout requires a 10-second video before changes, a 10-second video after changes, updated code, and chat history. It also states that the assignment is individual, the assigned repo should be cloned/forked, changes should be pushed to the student's personal repo, and no PR should be raised against the `SETAPESU26` main repo.
+
+Record the original code before replacing it, then record this final version showing reliable landing, Game Over, difficulty replay, and sound-triggering actions.
